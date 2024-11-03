@@ -1,4 +1,4 @@
-from db.databaseUtil import get_database, get_collection
+from db.databaseUtil import get_database, get_Item_Collection
 from datetime import datetime
 from fastapi import HTTPException
 from typing import Optional
@@ -10,7 +10,7 @@ def getUNIXtimestamp():
     return timestamp_milliseconds
 
 def insertNewItemInItemsCollection(newItem):
-    collection = get_collection()
+    collection = get_Item_Collection()
     try:
         newItem = dict(newItem)
         newItem["insert_ts"] = getUNIXtimestamp()
@@ -23,7 +23,7 @@ def insertNewItemInItemsCollection(newItem):
         raise HTTPException(status_code=400, detail="Invalid Request")
 
 def getItemFromItemId(id):
-    collection = get_collection()
+    collection = get_Item_Collection()
     try:
         res_cursor = collection.aggregate([
             {"$match": {"item_id": id}},
@@ -66,14 +66,14 @@ def filterItemsBasedOnKey(email: Optional[str], expiry_date: Optional[str], inse
             }
         }
     ]
-    collection = get_collection()
+    collection = get_Item_Collection()
     res_cursor = collection.aggregate(pipeline)
     result = list(res_cursor)
     
     return {"filtered_items": result}
 
 def deleteItemBasedOnItemId(id):
-    collection = get_collection()
+    collection = get_Item_Collection()
     try:
         res = collection.find_one_and_delete({"item_id": id}, {"_id": 0})
         return {
@@ -95,7 +95,7 @@ def updateItemRecord(id: int, name: Optional[str], email: Optional[str], expiry_
         update_query["quantity"] = quantity
 
     try:
-        collection = get_collection()
+        collection = get_Item_Collection()
         collection.update(filter_query, {"$set": update_query})
     except Exception as e:
         raise HTTPException(status_code=404, detail="Item not found")
